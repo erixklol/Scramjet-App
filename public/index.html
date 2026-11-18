@@ -1,66 +1,91 @@
 <!doctype html>
-<html>
+<!-- Gurt's Browser UI customization, November 2026. Original Scramjet copyright and AGPL license retained. -->
+<html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta
 			name="viewport"
 			content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
 		/>
-		<title>Scramjet</title>
-
-		<link rel="shortcut icon" content="favicon.webp" />
-	
+		<meta name="theme-color" content="#100d19" />
+		<meta
+			name="description"
+			content="Gurt's Browser — your space to explore, powered by Scramjet."
+		/>
+		<title>Gurt's Browser</title>
+		<link rel="shortcut icon" href="favicon.webp" />
 		<script src="/scram/scramjet.all.js"></script>
 		<script src="/baremux/index.js"></script>
-		
 		<link rel="stylesheet" href="index.css" />
 		<script src="register-sw.js" defer></script>
 		<script src="search.js" defer></script>
 		<script src="index.js" defer></script>
 	</head>
-
-	<body>
-		<div title="Scramjet Logo" class="flex-center logo-wrapper header-center">
-			<img class="logo" src="sj.png" alt="Scramjet" />
-			<h1>Scramjet | MW</h1>
-		</div>
-		<div class="flex-center desc left-margin">
-			<p>
-				Scramjet is an experimental interception based web proxy designed to
-				evade internet censorship, bypass arbitrary web browser restrictions and
-				innovate web proxy technologies.
+	<body class="gurt-home">
+		<a class="skip-link" href="#sj-address">Skip to search</a>
+		<header class="site-header">
+			<a class="wordmark" href="https://gurtsgames.lovable.app"
+				><span class="brand-icon" aria-hidden="true">g.</span>gurt's games</a
+			>
+			<a class="home-link" href="https://gurtsgames.lovable.app"
+				>Back to Games <span aria-hidden="true">↗</span></a
+			>
+		</header>
+		<main class="browser-home">
+			<div class="orbit-mark" aria-hidden="true">✧</div>
+			<p class="eyebrow">PLAY · LEARN · EXPLORE</p>
+			<h1>Gurt's <span>Browser</span></h1>
+			<p class="intro">A little curiosity. A whole world to explore.</p>
+			<form id="sj-form" role="search">
+				<input
+					id="sj-search-engine"
+					value="https://www.google.com/search?q=%s"
+					type="hidden"
+				/>
+				<label class="sr-only" for="sj-address"
+					>Search the web or enter a website address</label
+				>
+				<span class="search-icon" aria-hidden="true">⌕</span>
+				<input
+					id="sj-address"
+					type="text"
+					placeholder="Search anything, or enter a URL"
+					autocomplete="off"
+					autocapitalize="off"
+					spellcheck="false"
+					required
+					aria-describedby="search-help"
+				/>
+				<button type="submit" aria-label="Search or open website">
+					Go <span aria-hidden="true">→</span>
+				</button>
+			</form>
+			<p id="search-help" class="search-help">
+				Your next discovery is one search away. Press Enter to go.
 			</p>
-		</div>
-
-		<form id="sj-form" class="flex-center">
-			<input
-				id="sj-search-engine"
-				value="https://www.google.com/search?q=%s"
-				type="hidden"
-			/>
-			<input id="sj-address" type="text" placeholder="Search the web freely" />
-		</form>
-		<div class="desc left-margin">
-			<p id="sj-error"></p>
-			<pre id="sj-error-code"></pre>
-		</div>
-		<footer>
-			<div>
-				<a
-					title="The Mercury Workshop GitHub organization"
-					href="https://github.com/MercuryWorkshop"
-					>Mercury Workshop</a
-				>
-				<a
-					title="The example demo app for Scramjet"
-					href="https://github.com/MercuryWorkshop/Scramjet-Demo"
-					>GitHub</a
-				>
-				<a title="License information" href="credits.html">Credits</a>
+			<div class="error-region" aria-live="polite">
+				<p id="sj-error" role="alert"></p>
+				<pre id="sj-error-code"></pre>
 			</div>
-			<div>
-				<span>Scramjet &copy; MW 2025</span>
+			<div class="workspace-note">
+				<span aria-hidden="true">✦</span> A familiar space. A fresh perspective.
 			</div>
+		</main>
+		<footer class="site-footer">
+			<p>
+				Gurt's Browser — Powered by Scramjet, developed by Mercury Workshop.
+			</p>
+			<nav aria-label="Source and credits">
+				<a href="https://github.com/MercuryWorkshop/Scramjet-App"
+					>Original project</a
+				>
+				<a href="https://github.com/MercuryWorkshop">Original developers</a>
+				<a href="https://github.com/erixklol/Scramjet-App"
+					>Modified source (AGPL)</a
+				>
+				<a href="credits.html">License &amp; credits</a>
+			</nav>
+			<p class="copyright">Scramjet &copy; MW 2025</p>
 		</footer>
 	</body>
 </html>
