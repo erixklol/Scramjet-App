@@ -1,3 +1,7 @@
+## Import and test before connecting
+
+Import accepts protocol URLs, username:password@host:port, host:port:username:password and host:port. Without a scheme, the selected protocol is used. Paste and typing populate fields immediately; invalid input leaves existing fields intact. Percent-encoded credentials are decoded once. Edit the populated fields as needed. Test Connection uses a disposable worker with these fields and shuts it down afterward; it does not change the profile connection. Connect activates the fields.
+
 # Personal proxy settings
 
 Open **Advanced → Proxy Settings**. Default uses this deployment's existing same-origin `/wisp/` connection. Custom sends Scramjet HTTP requests and destination WebSockets through the configured proxy, using that Wisp connection as the network carrier. It changes neither the operating system proxy nor Chrome/Brave settings.
@@ -8,7 +12,7 @@ This setting is shared by Gurt's Browser pages on the **same origin in the same 
 
 - Import `http://user:password@host:8080`, `socks5://user:password@host:1080`, or `socks4a://user@host:1080`; or enter the equivalent fields. Percent-encode reserved characters when importing credentials. Manual fields handle that encoding automatically.
 - The installed CurlTransport supports `http:`, `socks5h:` and `socks4a:`. SOCKS5 is normalized to remote-DNS SOCKS5h. SOCKS4a has a user ID but no password authentication. HTTPS destinations work through HTTP CONNECT; `https://` TLS-to-proxy URLs are not supported by this version.
-- Connect selects a fresh transport. It does not claim the proxy has authenticated until a request succeeds. **Test Connection** requests `https://api.ipify.org?format=json` through the selected transport and shows the observed exit IP. Rotating providers may use a different IP for each request. This test cannot certify that an address is residential.
+- Connect selects a fresh transport. It does not claim the proxy has authenticated until a request succeeds. **Test Connection** requests `https://api.ipify.org?format=json` through a temporary transport using the entered settings and shows the observed exit IP. Rotating providers may use a different IP for each request. This test cannot certify that an address is residential.
 - A failed Custom connection never silently falls back to Default. Check the endpoint, credentials, provider allowlist and availability. Provider errors are deliberately sanitized; a safe numeric transport code may be shown.
 - Disconnect and Reset both discard the custom worker and select Default. Switching modes closes the browsing frame in every connected homepage and terminates the old transport, including its WebSockets. Enter the destination again to open a fresh browsing frame.
 

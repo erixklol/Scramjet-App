@@ -1,3 +1,53 @@
+export function importProxy(raw, selectedProtocol = "socks5h") {
+	try {
+		let text = raw.trim();
+		let protocol = selectedProtocol;
+		const scheme = /^([a-z0-9]+):\/\//i.exec(text);
+		if (scheme) {
+			protocol = scheme[1].toLowerCase();
+			text = text.slice(scheme[0].length);
+		}
+		if (protocol === "socks5") protocol = "socks5h";
+		let host,
+			port,
+			username = "",
+			password = "";
+		const at = text.lastIndexOf("@");
+		if (at >= 0) {
+			const auth = text.slice(0, at),
+				colon = auth.indexOf(":");
+			username = colon < 0 ? auth : auth.slice(0, colon);
+			password = colon < 0 ? "" : auth.slice(colon + 1);
+			text = text.slice(at + 1);
+		}
+		const parts = /^(\[[^\]]+\]|[^:\s]+):(\d+)(?::([^:]*):(.*))?$/.exec(text);
+		if (
+			!parts ||
+			(at >= 0 && parts[3] !== undefined) ||
+			(scheme && parts[3] !== undefined)
+		)
+			throw new Error();
+		[, host, port] = parts;
+		if (parts[3] !== undefined) {
+			username = parts[3];
+			password = parts[4];
+		}
+		const details = {
+			protocol,
+			host,
+			port,
+			username: decodeURIComponent(username),
+			password: decodeURIComponent(password),
+		};
+		manualProxy(details);
+		return details;
+	} catch {
+		throw new Error(
+			"Invalid proxy details. Check the format, credentials encoding and port (1–65535)."
+		);
+	}
+}
+
 export function parseProxy(raw) {
 	let url;
 	try {
