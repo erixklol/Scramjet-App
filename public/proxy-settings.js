@@ -1,4 +1,4 @@
-import { parseProxy, manualProxy } from "./proxy-config.js";
+import { importProxy, manualProxy } from "./proxy-config.js";
 export function initProxySettings(connection) {
 	const $ = (id) => document.getElementById(id);
 	const control = new SharedWorker("/proxy-worker.js?v=1", "bare-mux-worker");
@@ -10,6 +10,12 @@ export function initProxySettings(connection) {
 		mode = "default",
 		busy = false;
 	let engine;
+	let testWorker;
+	const stopTest = () => {
+		testWorker?.port.postMessage({ shutdown: true });
+		testWorker?.port.close();
+		testWorker = null;
+	};
 	const status = (text) => ($("proxy-status").textContent = text);
 	const clear = () => {
 		for (const id of [
@@ -21,6 +27,35 @@ export function initProxySettings(connection) {
 		])
 			$(id).value = "";
 	};
+	const fields = {
+		protocol: "proxy-protocol",
+		host: "proxy-host",
+		port: "proxy-port",
+		username: "proxy-user",
+		password: "proxy-password",
+	};
+	const configuredProxy = () =>
+		manualProxy(
+			Object.fromEntries(
+				Object.entries(fields).map(([key, id]) => [key, $(id).value])
+			)
+		);
+	const importDetails = () => {
+		if (!$("proxy-url").value.trim()) return;
+		try {
+			const details = importProxy(
+				$("proxy-url").value,
+				$("proxy-protocol").value
+			);
+			for (const [key, id] of Object.entries(fields))
+				$(id).value = details[key];
+			status("Proxy details imported");
+		} catch (error) {
+			status(error.message);
+		}
+	};
+	$("proxy-url").addEventListener("input", importDetails);
+	$("proxy-url").addEventListener("paste", () => setTimeout(importDetails, 0));
 	const heartbeat = () => control.port.postMessage({ control: "heartbeat" });
 	control.port.onmessage = ({ data }) => {
 		if (data.spawn) {
@@ -53,6 +88,7 @@ export function initProxySettings(connection) {
 	window.addEventListener("pagehide", () => {
 		clear();
 		clearInterval(timer);
+		stopTest();
 		control.port.postMessage({ control: "leave" });
 		control.port.close();
 		engine?.port.close();
@@ -99,23 +135,14 @@ export function initProxySettings(connection) {
 		if (busy) return;
 		try {
 			const proxy =
-				$("proxy-choice").value === "default"
-					? null
-					: $("proxy-url").value.trim()
-						? parseProxy($("proxy-url").value)
-						: manualProxy({
-								protocol: $("proxy-protocol").value,
-								host: $("proxy-host").value.trim(),
-								port: $("proxy-port").value.trim(),
-								username: $("proxy-user").value,
-								password: $("proxy-password").value,
-							});
+				$("proxy-choice").value === "default" ? null : configuredProxy();
 			void apply(proxy);
 		} catch (error) {
 			status(error.message);
 		}
 	};
 	const reset = () => {
+		stopTest();
 		clear();
 		$("proxy-choice").value = "default";
 		$("proxy-fields").disabled = true;
@@ -126,11 +153,26 @@ export function initProxySettings(connection) {
 	$("proxy-test").onclick = async () => {
 		if (busy) return;
 		setBusy(true);
-		status("Testing active connection…");
+		status("Testing entered settings…");
 		const testedGeneration = generation;
 		let timeout;
 		try {
-			const client = new BareMux.BareClient("/proxy-worker.js?v=1");
+			const custom = $("proxy-choice").value === "custom";
+			const proxy = custom ? configuredProxy() : null;
+			testWorker = new SharedWorker(
+				"/proxy-transport-worker.js",
+				"gurt-test-" + crypto.randomUUID()
+			);
+			testWorker.port.postMessage({
+				configure: {
+					websocket:
+						(location.protocol === "https:" ? "wss://" : "ws://") +
+						location.host +
+						"/wisp/",
+					...(proxy ? { proxy } : {}),
+				},
+			});
+			const client = new BareMux.BareClient(testWorker.port);
 			const response = await Promise.race([
 				client.fetch("https://api.ipify.org?format=json", {
 					cache: "no-store",
@@ -146,7 +188,10 @@ export function initProxySettings(connection) {
 			if (typeof body.ip !== "string" || !/^[0-9a-fA-F:.]+$/.test(body.ip))
 				throw new Error();
 			status(
-				(mode === "custom" ? "Custom" : "Default") + " exit IP: " + body.ip
+				(custom ? "Entered proxy" : "Default") +
+					" exit IP: " +
+					body.ip +
+					". Test succeeded. Click Connect to activate these settings."
 			);
 		} catch (error) {
 			if (generation !== testedGeneration) return;
@@ -159,6 +204,7 @@ export function initProxySettings(connection) {
 			);
 		} finally {
 			clearTimeout(timeout);
+			stopTest();
 			setBusy(false);
 		}
 	};
