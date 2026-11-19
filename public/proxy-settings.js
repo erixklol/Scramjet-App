@@ -156,9 +156,12 @@ export function initProxySettings(connection) {
 		status("Testing entered settings…");
 		const testedGeneration = generation;
 		let timeout;
+		let reply;
+		let stage = "settings";
 		try {
 			const custom = $("proxy-choice").value === "custom";
 			const proxy = custom ? configuredProxy() : null;
+			stage = "connection";
 			testWorker = new SharedWorker(
 				"/proxy-transport-worker.js",
 				"gurt-test-" + crypto.randomUUID()
@@ -172,18 +175,43 @@ export function initProxySettings(connection) {
 					...(proxy ? { proxy } : {}),
 				},
 			});
-			const client = new BareMux.BareClient(testWorker.port);
-			const response = await Promise.race([
-				client.fetch("https://api.ipify.org?format=json", {
-					cache: "no-store",
+			// Use the isolated worker directly: BareMux's ping retry can reconnect to the profile worker.
+			const channel = new MessageChannel();
+			reply = channel.port1;
+			const result = new Promise((resolve, reject) => {
+				reply.onmessage = ({ data }) =>
+					data.type === "error" ? reject(data.error) : resolve(data.fetch);
+				testWorker.onerror = () =>
+					reject(new Error("Worker initialization failed"));
+			});
+			testWorker.port.postMessage(
+				{
+					message: {
+						type: "fetch",
+						fetch: {
+							remote: "https://api.ipify.org?format=json",
+							method: "GET",
+							headers: {},
+							body: undefined,
+						},
+					},
+					port: channel.port2,
+				},
+				[channel.port2]
+			);
+			const body = await Promise.race([
+				result.then(async (response) => {
+					if (!response || response.status !== 200)
+						throw new Error("IP check failed");
+					return new Response(response.body).json();
 				}),
-				new Promise(
-					(_, reject) =>
-						(timeout = setTimeout(() => reject(new Error()), 15000))
-				),
+				new Promise((_, reject) => {
+					timeout = setTimeout(
+						() => reject(new Error("Test timed out")),
+						30000
+					);
+				}),
 			]);
-			if (!response.ok) throw new Error();
-			const body = await response.json();
 			if (generation !== testedGeneration) return;
 			if (typeof body.ip !== "string" || !/^[0-9a-fA-F:.]+$/.test(body.ip))
 				throw new Error();
@@ -195,15 +223,18 @@ export function initProxySettings(connection) {
 			);
 		} catch (error) {
 			if (generation !== testedGeneration) return;
-			const code = /Transport code (\d{1,3})\b/.exec(
+			const code = /(?:Transport code|error code) (\d{1,3})\b/.exec(
 				String(error?.message || "")
 			)?.[1];
 			status(
-				"Connection test failed or timed out. Check host, port, credentials, provider IP allowlist and availability. No automatic fallback to Default was used." +
-					(code ? " Transport code " + code + "." : "")
+				stage === "settings"
+					? "Enter valid proxy fields before testing. Check host and port (1–65535)."
+					: "Connection test failed or timed out. Check host, port, credentials, provider IP allowlist and availability. No automatic fallback to Default was used." +
+							(code ? " Transport code " + code + "." : "")
 			);
 		} finally {
 			clearTimeout(timeout);
+			reply?.close();
 			stopTest();
 			setBusy(false);
 		}
