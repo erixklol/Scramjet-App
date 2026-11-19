@@ -13,13 +13,13 @@
 			content="Gurt's Browser — your space to explore, powered by Scramjet."
 		/>
 		<title>Gurt's Browser</title>
-		<link rel="shortcut icon" href="favicon.webp" />
+		<link rel="shortcut icon" href="favicon.ico" />
 		<script src="/scram/scramjet.all.js"></script>
 		<script src="/baremux/index.js"></script>
 		<link rel="stylesheet" href="index.css" />
 		<script src="register-sw.js" defer></script>
 		<script src="search.js" defer></script>
-		<script src="index.js" defer></script>
+		<script src="index.js" type="module"></script>
 	</head>
 	<body class="gurt-home">
 		<a class="skip-link" href="#sj-address">Skip to search</a>
@@ -67,6 +67,93 @@
 				<p id="sj-error" role="alert"></p>
 				<pre id="sj-error-code"></pre>
 			</div>
+			<details class="proxy-settings" id="proxy-settings">
+				<summary>
+					Advanced <span aria-hidden="true">›</span> Proxy Settings
+					<span id="proxy-mode">Default</span>
+				</summary>
+				<div class="proxy-panel">
+					<p>
+						Applies only to Gurt's Browser tabs in this browser profile. Other
+						websites, profiles and devices are unaffected. Switching closes
+						current browsing frames and connections.
+					</p>
+					<form id="proxy-form" autocomplete="off">
+						<label
+							>Mode<select id="proxy-choice">
+								<option value="default">Default — Northflank</option>
+								<option value="custom">Custom — personal proxy</option>
+							</select></label
+						>
+						<fieldset id="proxy-fields" disabled>
+							<legend>Personal proxy</legend>
+							<label
+								>Import proxy URL<input
+									id="proxy-url"
+									type="password"
+									autocomplete="new-password"
+									placeholder="socks5://username:password@host:1080"
+							/></label>
+							<p>
+								Enter a URL above, or complete the fields below. SOCKS5 uses
+								remote DNS. SOCKS4a supports a user ID but no password.
+							</p>
+							<div class="proxy-grid">
+								<label
+									>Protocol<select id="proxy-protocol">
+										<option value="socks5h">SOCKS5</option>
+										<option value="http">HTTP CONNECT</option>
+										<option value="socks4a">SOCKS4a</option>
+									</select></label
+								>
+								<label
+									>Host<input
+										id="proxy-host"
+										autocomplete="off"
+										spellcheck="false"
+								/></label>
+								<label
+									>Port<input
+										id="proxy-port"
+										inputmode="numeric"
+										autocomplete="off"
+								/></label>
+								<label
+									>Username<input
+										id="proxy-user"
+										autocomplete="off"
+										spellcheck="false"
+								/></label>
+								<label
+									>Password<input
+										id="proxy-password"
+										type="password"
+										autocomplete="new-password"
+								/></label>
+							</div>
+						</fieldset>
+						<div class="proxy-actions">
+							<button type="submit">Connect</button
+							><button type="button" id="proxy-disconnect">Disconnect</button
+							><button type="button" id="proxy-test">Test Connection</button
+							><button type="button" id="proxy-reset">Reset to Default</button>
+						</div>
+					</form>
+					<p id="proxy-status" role="status" aria-live="polite">
+						Default connection. No personal proxy configured.
+					</p>
+					<p class="proxy-privacy">
+						Credentials stay in memory and are cleared on reset or when the last
+						Gurt's Browser tab closes. Suspended sessions expire after two
+						minutes without a heartbeat. Browser extensions, password managers
+						and other people using this profile may still access entered
+						credentials: use a separate profile on shared computers. Test
+						Connection contacts api.ipify.org through the active transport and
+						displays its observed exit IP; it does not prove an IP is
+						residential.
+					</p>
+				</div>
+			</details>
 			<div class="workspace-note">
 				<span aria-hidden="true">✦</span> A familiar space. A fresh perspective.
 			</div>
