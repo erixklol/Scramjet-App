@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "url";
 import { hostname } from "node:os";
 import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
@@ -10,6 +11,18 @@ import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
 import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 
 const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
+// libcurl-transport 1.5.2 passes proxy to HTTPSession but omits it from WebSockets.
+// Apply a narrow, fail-closed compatibility patch, preserving the upstream source/license.
+const curlSource = readFileSync(libcurlPath + "/index.mjs", "utf8");
+const socketOptions = "headers: requestHeaders\n    });";
+if (curlSource.split(socketOptions).length !== 2)
+	throw new Error(
+		"CurlTransport compatibility changed; review the WebSocket proxy adapter."
+	);
+const personalCurlSource = curlSource.replace(
+	socketOptions,
+	"headers: requestHeaders, proxy: this.proxy\n    });"
+);
 
 // Wisp Configuration: Refer to the documentation at https://www.npmjs.com/package/@mercuryworkshop/wisp-js
 
@@ -39,6 +52,9 @@ fastify.register(fastifyStatic, {
 	root: publicPath,
 	decorateReply: true,
 });
+fastify.get("/personal-curl/index.mjs", (_request, reply) =>
+	reply.type("application/javascript").send(personalCurlSource)
+);
 
 fastify.register(fastifyStatic, {
 	root: scramjetPath,
@@ -92,5 +108,5 @@ if (isNaN(port)) port = 8080;
 
 fastify.listen({
 	port: port,
-	host: "0.0.0.0",
+	host: process.env.HOST || "0.0.0.0",
 });

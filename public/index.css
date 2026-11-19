@@ -369,3 +369,108 @@ h1 span {
 .credit input:checked ~ pre {
 	display: block;
 }
+
+.proxy-settings {
+	text-align: left;
+	margin-top: 28px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 16px;
+	padding: 16px;
+	color: var(--text);
+}
+.proxy-settings summary {
+	cursor: pointer;
+	min-height: 32px;
+	font-weight: 600;
+}
+#proxy-mode {
+	float: right;
+	border-radius: 99px;
+	background: #b79aff25;
+	color: var(--accent);
+	padding: 3px 10px;
+	font-size: 12px;
+}
+.proxy-panel p {
+	font-size: 12px;
+	line-height: 1.7;
+	color: var(--muted);
+}
+.proxy-panel label {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 13px;
+	margin: 12px 0;
+}
+.proxy-panel input,
+.proxy-panel select {
+	width: 100%;
+	min-width: 0;
+	padding: 12px;
+	border-radius: 10px;
+	border: 1px solid var(--border);
+	background: var(--bg);
+	color: var(--text);
+	font: inherit;
+}
+.proxy-panel fieldset {
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	min-width: 0;
+}
+.proxy-panel fieldset:disabled {
+	opacity: 0.5;
+}
+.proxy-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0 14px;
+}
+.proxy-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 16px;
+}
+.proxy-actions button {
+	padding: 12px 16px;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: var(--accent);
+	color: var(--bg);
+	font: inherit;
+	cursor: pointer;
+}
+.proxy-actions button:disabled {
+	opacity: 0.5;
+	cursor: wait;
+}
+#proxy-status {
+	color: var(--text);
+	overflow-wrap: anywhere;
+}
+/* The homepage entrance transform must not trap the fixed settings below the frame. */
+body:has(#sj-frame) .browser-home {
+	animation: none;
+	transform: none;
+}
+body:has(#sj-frame) .proxy-settings {
+	position: fixed;
+	right: 12px;
+	top: 12px;
+	z-index: 15;
+	width: min(620px, calc(100vw - 24px));
+	max-height: 85vh;
+	overflow: auto;
+	box-shadow: 0 12px 40px #0008;
+}
+@media (max-width: 520px) {
+	.proxy-grid {
+		grid-template-columns: 1fr;
+	}
+	.proxy-actions button {
+		flex: 1;
+	}
+}

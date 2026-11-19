@@ -51,6 +51,7 @@ for (const [input, expected] of [
 		};
 		const context = vm.createContext({
 			URL,
+			initProxySettings: () => ({ ready: Promise.resolve() }),
 			document: {
 				getElementById: (id) => elements[id],
 				body: {
@@ -88,7 +89,10 @@ for (const [input, expected] of [
 			},
 		});
 		vm.runInContext(readFileSync("public/search.js", "utf8"), context);
-		vm.runInContext(readFileSync("public/index.js", "utf8"), context);
+		vm.runInContext(
+			readFileSync("public/index.js", "utf8").replace(/^import.*\n/, ""),
+			context
+		);
 		let prevented = false;
 		await submit({
 			preventDefault() {
@@ -98,6 +102,5 @@ for (const [input, expected] of [
 		assert.ok(prevented && registered);
 		assert.equal(destination, expected);
 		assert.equal(appended.id, "sj-frame");
-		assert.equal(transport[0], "/libcurl/index.mjs");
-		assert.equal(transport[1][0].websocket, "wss://browser.test/wisp/");
+		assert.equal(transport, undefined);
 	});

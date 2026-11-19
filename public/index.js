@@ -1,4 +1,4 @@
-"use strict";
+import { initProxySettings } from "./proxy-settings.js";
 /**
  * @type {HTMLFormElement}
  */
@@ -32,7 +32,9 @@ const scramjet = new ScramjetController({
 
 scramjet.init();
 
-const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+const connection = new BareMux.BareMuxConnection("/proxy-worker.js?v=1");
+
+const settings = initProxySettings(connection);
 
 form.addEventListener("submit", async (event) => {
 	event.preventDefault();
@@ -41,22 +43,14 @@ form.addEventListener("submit", async (event) => {
 		await registerSW();
 	} catch (err) {
 		error.textContent = "Failed to register service worker.";
-		errorCode.textContent = err.toString();
-		throw err;
+		errorCode.textContent = "Check browser support and reload.";
+		return;
 	}
 
 	const url = search(address.value, searchEngine.value);
 
-	let wispUrl =
-		(location.protocol === "https:" ? "wss" : "ws") +
-		"://" +
-		location.host +
-		"/wisp/";
-	if ((await connection.getTransport()) !== "/libcurl/index.mjs") {
-		await connection.setTransport("/libcurl/index.mjs", [
-			{ websocket: wispUrl },
-		]);
-	}
+	await settings.ready;
+	document.getElementById("sj-frame")?.remove();
 	const frame = scramjet.createFrame();
 	frame.frame.id = "sj-frame";
 	document.body.appendChild(frame.frame);
